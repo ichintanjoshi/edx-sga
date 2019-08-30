@@ -30,7 +30,7 @@
         <p>
           <% if (graded) { %>
             <% if (graded.comment) { %>
-              <b>{% trans "Instructor comment" %}</b> <%= graded.comment %><br/>
+              <b>{% trans "Mentor's comment" %}</b> <%= graded.comment %><br/>
             <% } %>
             <% if (annotated) { %>
               <b>{% trans "Annotated file from instructor" %}</b>
@@ -71,7 +71,7 @@
         <th class="header">{% trans "Uploaded" %} <i class="icon fa fa-sort"/></th>
         <th class="header">{% trans "Submitted" %} <i class="icon fa fa-sort"/></th>
         <th class="header" style="display:none;">{% trans "Grade" %} <i class="icon fa fa-sort"/></th>
-        <th class="header">{% trans "Instructor's comments" %} <i class="icon fa fa-sort"/></th>
+        <th class="header">{% trans "Mentor's comments" %} <i class="icon fa fa-sort"/></th>
         <th class="header">{% trans "Annotated" %} <i class="icon fa fa-sort"/></th>
         <th class="header" colspan="2">{% trans "Actions" %}</th>
       </tr>
@@ -102,7 +102,7 @@
               <%= assignment.score %> /
               <%= max_score %>
               <% if (! assignment.approved) { %>
-                ({% trans "Awaiting instructor approval" %})
+                ({% trans "Awaiting admin approval" %})
               <% } %>
             <% } %>
           </td>

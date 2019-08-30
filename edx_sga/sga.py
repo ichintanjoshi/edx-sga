@@ -35,6 +35,8 @@ from xblockutils.studio_editable import StudioEditableXBlockMixin
 from xmodule.util.duedate import get_extended_due_date  # lint-amnesty, pylint: disable=import-error
 from xmodule.contentstore.content import StaticContent
 
+from group_management.models import CourseGroup
+
 from edx_sga.constants import ITEM_TYPE
 from edx_sga.showanswer import ShowAnswerXBlockMixin
 from edx_sga.tasks import (
@@ -798,6 +800,16 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
             information will be used on grading screen
             """
             # Submissions doesn't have API for this, just use model directly.
+
+            current_user = self.get_real_user()
+            if current_user.is_superuser:
+                group = None
+            else:
+                try:
+                    group = CourseGroup.objects.get(mentor=current_user)
+                    group_users = group.users.all()
+                except:
+                    group = None
             students = SubmissionsStudent.objects.filter(
                 course_id=self.course_id,
                 item_id=self.block_id)
@@ -806,6 +818,13 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
                 if not submission:
                     continue
                 user = user_by_anonymous_id(student.student_id)
+                if group is not None:
+                    if user in group_users:
+                        pass
+                    else:
+                        continue
+                else:
+                    pass
                 student_module = self.get_or_create_student_module(user)
                 state = json.loads(student_module.state)
                 score = self.get_score(student.student_id)
