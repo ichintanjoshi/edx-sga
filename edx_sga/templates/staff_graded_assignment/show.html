@@ -29,7 +29,6 @@
         </p>
         <p>
           <% if (graded) { %>
-            {% blocktrans %}Your score is <%= graded.score %> / <%= max_score %>{% endblocktrans %}<br/>
             <% if (graded.comment) { %>
               <b>{% trans "Instructor comment" %}</b> <%= graded.comment %><br/>
             <% } %>
@@ -38,7 +37,7 @@
               <a href="<%= annotatedUrl %>"><%= annotated.filename %></a><br/>
             <% } %>
           <% } else if (uploaded) { %>
-            {% trans "This assignment has not yet been graded." %}
+            {% trans "Mentor will respond shortly." %}
           <% } %>
         </p>
         <% if (upload_allowed) { %>
@@ -71,7 +70,7 @@
         <th class="header">{% trans "Filename" %} <i class="icon fa fa-sort"/></th>
         <th class="header">{% trans "Uploaded" %} <i class="icon fa fa-sort"/></th>
         <th class="header">{% trans "Submitted" %} <i class="icon fa fa-sort"/></th>
-        <th class="header">{% trans "Grade" %} <i class="icon fa fa-sort"/></th>
+        <th class="header" style="display:none;">{% trans "Grade" %} <i class="icon fa fa-sort"/></th>
         <th class="header">{% trans "Instructor's comments" %} <i class="icon fa fa-sort"/></th>
         <th class="header">{% trans "Annotated" %} <i class="icon fa fa-sort"/></th>
         <th class="header" colspan="2">{% trans "Actions" %}</th>
@@ -98,7 +97,7 @@
               {% trans "No" %}
             <% } %>
           </td>
-          <td>
+          <td style="display:none;">
             <% if (assignment.score !== null) { %>
               <%= assignment.score %> /
               <%= max_score %>
@@ -119,9 +118,9 @@
             <% if (assignment.may_grade) { %>
               <a class="enter-grade-button button" href="#enter-grade-{{ id }}">
                 <% if (assignment.needs_approval) { %>
-                  {% trans "Approve grade" %}
+                  {% trans "Approve Feedback" %}
                 <% } else { %>
-                  {% trans "Enter grade" %}
+                  {% trans "Enter Feedback" %}
                 <% } %>
               </a>
            <% } %>
@@ -186,17 +185,17 @@
   <section aria-hidden="true" class="modal grade-modal" id="enter-grade-{{ id }}" tabindex="-1">
     <div class="inner-wrapper" style="color: black">
       <header><h2>
-        {% trans "Enter Grade" %}
+        {% trans "Enter Feedback" %}
       </h2></header>
       <br/>
       <div style="display: block;">
         <form id="enter-grade-form">
           <input id="module_id-input" type="hidden" name="module_id"/>
           <input id="submission_id-input" type="hidden" name="submission_id"/>
-          <div>{% blocktrans with student_name="<span id='student-name'/>" %}Grade for {{student_name}}{% endblocktrans %}</div>
-          <div>{% trans "Grade:" %} <input id="grade-input" name="grade"/>
+          <div>{% blocktrans with student_name="<span id='student-name'/>" %}Feedback For {{student_name}}{% endblocktrans %}</div>
+          <div style="display: none;">{% trans "Grade:" %} <input id="grade-input" name="grade" value="100" />
             <span class="error"></span></div>
-          <div>{% trans "Comment:" %} <textarea id="comment-input" name="comment" rows="4"></textarea></div>
+          <div>{% trans "Feedback:" %} <textarea id="comment-input" name="comment" rows="4"></textarea></div>
           <div>
             <button type="submit">{% trans "Submit" %}</button>
             <button type="button" id="enter-grade-cancel">
