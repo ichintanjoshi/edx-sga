@@ -34,8 +34,13 @@ from xblock.fragment import Fragment  # lint-amnesty, pylint: disable=import-err
 from xblockutils.studio_editable import StudioEditableXBlockMixin
 from xmodule.util.duedate import get_extended_due_date  # lint-amnesty, pylint: disable=import-error
 from xmodule.contentstore.content import StaticContent
+from edxmako.shortcuts import render_to_response, render_to_string
 
 from group_management.models import CourseGroup
+
+from django.contrib.auth.models import User
+from django.core import mail
+from django.utils.html import strip_tags
 
 from edx_sga.constants import ITEM_TYPE
 from edx_sga.showanswer import ShowAnswerXBlockMixin
@@ -293,6 +298,19 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
             submission.answer['finalized'] = True
             submission.submitted_at = django_now()
             submission.save()
+        try:
+            mail_context = {}
+            user = User.objects.get(id=self.xmodule_runtime.user_id)
+            subject = "There is a new Submission!"
+            mail_context['user'] = user
+            course_group = CourseGroup.objects.get(users=user.id)
+            mentor = course_group.mentor
+            message = render_to_string('emails/new_submission.html', mail_context)
+            from_address = settings.DEFAULT_FROM_EMAIL
+            dest_address = mentor.email
+            mail.send_mail(subject, strip_tags(message), from_address, [dest_address], fail_silently=False,html_message=message)
+        except Exception as e:
+            log.info("FAILED TO SEND MAIL")
         return Response(json_body=self.student_state())
 
     @XBlock.handler
@@ -445,6 +463,17 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
             module.module_state_key,
             module.student.username
         )
+        try:
+            mail_context = {}
+            subject = "Your assignment has feedback!"
+            user = User.objects.get(username=module.student.username)
+            mail_context['user'] = user
+            message = render_to_string('emails/assignment_feedback.html', mail_context)
+            from_address = settings.DEFAULT_FROM_EMAIL
+            dest_address = user.email
+            mail.send_mail(subject, strip_tags(message), from_address, [dest_address], fail_silently=False,html_message=message)
+        except Exception as e:
+            log.info("FAILED TO SEND MAIL")
 
         return Response(json_body=self.staff_grading_data())
 
@@ -1069,3 +1098,4 @@ def require(assertion):
     """
     if not assertion:
         raise PermissionDenied
+
