@@ -11,6 +11,7 @@ import urllib
 import pkg_resources
 import pytz
 from courseware.models import StudentModule  # lint-amnesty, pylint: disable=import-error
+from courseware.courses import get_course_by_id
 from django.conf import settings  # lint-amnesty, pylint: disable=import-error
 from django.core.exceptions import PermissionDenied  # lint-amnesty, pylint: disable=import-error
 from django.core.files import File  # lint-amnesty, pylint: disable=import-error
@@ -19,6 +20,7 @@ from django.template import Context, Template  # lint-amnesty, pylint: disable=i
 from django.utils.encoding import force_text  # pylint: disable=import-error
 from django.utils.timezone import now as django_now  # pylint: disable=import-error
 from django.utils.translation import ugettext_lazy as _  # pylint: disable=import-error
+from django.urls import reverse
 from safe_lxml import etree  # pylint: disable=import-error
 from student.models import user_by_anonymous_id  # lint-amnesty, pylint: disable=import-error
 from submissions import api as submissions_api  # lint-amnesty, pylint: disable=import-error
@@ -299,10 +301,14 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
             submission.submitted_at = django_now()
             submission.save()
         try:
+            kwargs = {'course_id': self.course_id, 'location': self.location}
+            block_location_url = reverse('jump_to', kwargs=kwargs)
             mail_context = {}
             user = User.objects.get(id=self.xmodule_runtime.user_id)
             subject = "There is a new Submission!"
             mail_context['user'] = user
+            mail_context['block_location_url'] = block_location_url
+            mail_context['course_name'] = get_course_by_id(self.course_id).display_name
             course_group = CourseGroup.objects.get(users=user.id)
             mentor = course_group.mentor
             message = render_to_string('emails/new_submission.html', mail_context)
@@ -464,10 +470,14 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
             module.student.username
         )
         try:
+            kwargs = {'course_id': self.course_id, 'location': self.location}
+            block_location_url = reverse('jump_to', kwargs=kwargs)
             mail_context = {}
             subject = "Your assignment has feedback!"
             user = User.objects.get(username=module.student.username)
             mail_context['user'] = user
+            mail_context['block_location_url'] = block_location_url
+            mail_context['course_name'] = get_course_by_id(self.course_id).display_name
             message = render_to_string('emails/assignment_feedback.html', mail_context)
             from_address = settings.DEFAULT_FROM_EMAIL
             dest_address = user.email
