@@ -44,6 +44,10 @@ from django.contrib.auth.models import User
 from django.core import mail
 from django.utils.html import strip_tags
 
+from edx_notifications.data import NotificationMessage
+from edx_notifications.lib.publisher import publish_notification_to_user,get_notification_type
+
+
 from edx_sga.constants import ITEM_TYPE
 from edx_sga.showanswer import ShowAnswerXBlockMixin
 from edx_sga.tasks import (
@@ -315,6 +319,36 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
             from_address = settings.DEFAULT_FROM_EMAIL
             dest_address = mentor.email
             mail.send_mail(subject, strip_tags(message), from_address, [dest_address], fail_silently=False,html_message=message)
+            user_msg = NotificationMessage(
+                msg_type=get_notification_type('open-edx.xblock.group-project.file-uploaded'),
+                namespace=str(self.course_id),
+                # base payload, other values will be passed in as extra_payload
+                payload={
+                    '_schema_version': 1,
+                    '_click_link': '#',
+                    'action_username': user.username,
+                    'activity_name': 'File Upload',
+                    'verb': 'Your File has been uploaded',
+                }
+            )
+            if course_group:
+                group_name = course_group.name
+                mentor_msg = NotificationMessage(
+                    msg_type=get_notification_type('open-edx.xblock.group-project.file-uploaded'),
+                    namespace=str(self.course_id),
+                    # base payload, other values will be passed in as extra_payload
+                    payload={
+                        '_schema_version': 1,
+                        '_click_link': '#',
+                        'action_username': user.username,
+                        'activity_name': 'File Upload',
+                        'verb': 'has uploaded a file in {} group'.format(group_name),
+                    }
+                )
+                publish_notification_to_user(user.id, user_msg)
+                publish_notification_to_user(mentor.id, mentor_msg)
+            else:
+                publish_notification_to_user(user.id, user_msg)
         except Exception as e:
             log.info("FAILED TO SEND MAIL")
         return Response(json_body=self.student_state())
@@ -482,8 +516,21 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
             from_address = settings.DEFAULT_FROM_EMAIL
             dest_address = user.email
             mail.send_mail(subject, strip_tags(message), from_address, [dest_address], fail_silently=False,html_message=message)
+            user_msg = NotificationMessage(
+                msg_type=get_notification_type('open-edx.xblock.group-project.grades-posted'),
+                namespace=str(self.course_id),
+                # base payload, other values will be passed in as extra_payload
+                payload={
+                    '_schema_version': 1,
+                    '_click_link': '#',
+                    'action_username': user.username,
+                    'activity_name': 'Feedback',
+                }
+            )
+            publish_notification_to_user(user.id, user_msg)
         except Exception as e:
             log.info("FAILED TO SEND MAIL")
+            log.info(str(e))
 
         return Response(json_body=self.staff_grading_data())
 
