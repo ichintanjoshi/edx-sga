@@ -325,7 +325,7 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
                 # base payload, other values will be passed in as extra_payload
                 payload={
                     '_schema_version': 1,
-                    '_click_link': '#',
+                    '_click_link': block_location_url,
                     'action_username': user.username,
                     'activity_name': 'File Upload',
                     'verb': 'Your File has been uploaded',
@@ -339,7 +339,7 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
                     # base payload, other values will be passed in as extra_payload
                     payload={
                         '_schema_version': 1,
-                        '_click_link': '#',
+                        '_click_link': block_location_url,
                         'action_username': user.username,
                         'activity_name': 'File Upload',
                         'verb': 'has uploaded a file in {} group'.format(group_name),
@@ -522,7 +522,7 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
                 # base payload, other values will be passed in as extra_payload
                 payload={
                     '_schema_version': 1,
-                    '_click_link': '#',
+                    '_click_link': block_location_url,
                     'action_username': user.username,
                     'activity_name': 'Feedback',
                 }
