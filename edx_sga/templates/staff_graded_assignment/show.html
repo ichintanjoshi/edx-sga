@@ -28,6 +28,10 @@
           <a href="<%= downloadUrl %>"><%= uploaded.filename %></a>
         </p>
         <p>
+          <b>{% trans "Request For Resubmission" %}</b>
+          <a href="<%= requestResubmissiontUrl %>" id="request_for_resubmit">Request</a>
+        </p>
+        <p>
           <% if (graded) { %>
             <% if (graded.comment) { %>
               <b>{% trans "Mentor's comment" %}</b> <%= graded.comment %><br/>
@@ -193,7 +197,7 @@
           <input id="module_id-input" type="hidden" name="module_id"/>
           <input id="submission_id-input" type="hidden" name="submission_id"/>
           <div>{% blocktrans with student_name="<span id='student-name'/>" %}Feedback For {{student_name}}{% endblocktrans %}</div>
-          <div style="display: none;">{% trans "Grade:" %} <input id="grade-input" name="grade" value="100" />
+          <div>{% trans "Grade:" %} <input id="grade-input" name="grade" />
             <span class="error"></span></div>
           <div>{% trans "Feedback:" %} <textarea id="comment-input" name="comment" rows="4"></textarea></div>
           <div>

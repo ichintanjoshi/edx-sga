@@ -18,6 +18,7 @@ function StaffGradedAssignmentXBlock(runtime, element) {
         var downloadSubmissionsUrl = runtime.handlerUrl(element, 'download_submissions');
         var prepareDownloadSubmissionsUrl = runtime.handlerUrl(element, 'prepare_download_submissions');
         var downloadSubmissionsStatusUrl = runtime.handlerUrl(element, 'download_submissions_status');
+        var requestResubmissiontUrl = runtime.handlerUrl(element, 'request_for_resubmission');
         var template = _.template($(element).find("#sga-tmpl").text());
         var gradingTemplate;
         var preparingSubmissionsMsg = gettext(
@@ -29,6 +30,7 @@ function StaffGradedAssignmentXBlock(runtime, element) {
             state.downloadUrl = downloadUrl;
             state.annotatedUrl = annotatedUrl;
             state.error = state.error || false;
+            state.requestResubmissiontUrl = requestResubmissiontUrl;
 
             // Render template
             var content = $(element).find('#sga-content').html(template(state));
@@ -37,6 +39,21 @@ function StaffGradedAssignmentXBlock(runtime, element) {
               $.post(finalizeUploadUrl).success(
                   function (state) {
                       render(state);
+                  }
+              ).fail(
+                  function () {
+                      state.error = gettext('Submission failed. Please contact your course instructor.');
+                      render(state);
+                  }
+              );
+            });
+
+            $(content).find('#request_for_resubmit').on('click', function(e) {
+              e.preventDefault();
+              $.post(requestResubmissiontUrl).success(
+                  function (state) {
+                      alert('Your Request has been sent');
+                      $("#request_for_resubmit").hide();
                   }
               ).fail(
                   function () {
@@ -231,7 +248,7 @@ function StaffGradedAssignmentXBlock(runtime, element) {
             $(element).find('#student-name').text(row.data('fullname'));
             form.find('#module_id-input').val(row.data('module_id'));
             form.find('#submission_id-input').val(row.data('submission_id'));
-            form.find('#grade-input').val(100);
+            form.find('#grade-input').val();
             form.find('#comment-input').text(row.data('comment'));
             form.off('submit').on('submit', function(event) {
                 var max_score = row.parents('#grade-info').data('max_score');

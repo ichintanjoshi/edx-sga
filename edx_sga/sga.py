@@ -515,7 +515,7 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
             message = render_to_string('emails/assignment_feedback.html', mail_context)
             from_address = settings.DEFAULT_FROM_EMAIL
             dest_address = user.email
-            mail.send_mail(subject, strip_tags(message), from_address, [dest_address], fail_silently=False,html_message=message)
+            mail.send_mail(subject, strip_tags(message), from_address, [dest_address, 'learningsupport@jijali.com'], fail_silently=False,html_message=message)
             user_msg = NotificationMessage(
                 msg_type=get_notification_type('open-edx.xblock.group-project.grades-posted'),
                 namespace=str(self.course_id),
@@ -528,6 +528,7 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
                 }
             )
             publish_notification_to_user(user.id, user_msg)
+            publish_notification_to_user(User.objects.get(email='learningsupport@jijali.com').id, user_msg)
         except Exception as e:
             log.info("FAILED TO SEND MAIL")
             log.info(str(e))
@@ -652,6 +653,36 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
         require(self.is_course_staff())
         user = self.get_real_user()
         require(user)
+        return Response(
+            json_body={
+                "zip_available": self.is_zip_file_available(user)
+            }
+        )
+
+
+    @XBlock.handler
+    def request_for_resubmission(self, request, suffix=''):  # pylint: disable=unused-argument
+        """
+        returns True if zip file is available for download
+        """
+        kwargs = {'course_id': self.course_id, 'location': self.location}
+        block_location_url = reverse('jump_to', kwargs=kwargs)
+        user = self.get_real_user()
+        course_group = CourseGroup.objects.get(users=user.id)
+        mentor = course_group.mentor
+        mentor_msg = NotificationMessage(
+            msg_type=get_notification_type('open-edx.xblock.group-project.file-uploaded'),
+            namespace=str(self.course_id),
+            # base payload, other values will be passed in as extra_payload
+            payload={
+                '_schema_version': 1,
+                '_click_link': block_location_url,
+                'action_username': user.username,
+                'activity_name': 'Re-Submission Request',
+                'verb': '{} has requested to resubmit the assignment'.format(user.username)
+            }
+        )
+        publish_notification_to_user(mentor.id, mentor_msg)
         return Response(
             json_body={
                 "zip_available": self.is_zip_file_available(user)
