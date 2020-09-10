@@ -28,13 +28,20 @@
           <a href="<%= downloadUrl %>"><%= uploaded.filename %></a>
         </p>
         <p>
-          <b>{% trans "Request For Resubmission" %}</b>
-          <a href="<%= requestResubmissiontUrl %>" id="request_for_resubmit">Request</a>
-        </p>
-        <p>
           <% if (graded) { %>
+            <p>
+              <b>{% trans "Request For Resubmission" %}</b>
+              <a href="<%= requestResubmissiontUrl %>" id="request_for_resubmit">Request</a>
+            </p>
             <% if (graded.comment) { %>
               <b>{% trans "Mentor's comment" %}</b> <%= graded.comment %><br/>
+              <% if (!student_commented.student_comment) { %>
+                <p class="student_comment_section">
+                  <b>{% trans "Your Comment on Mentor Feedback" %}</b>
+                  <input type="text" id="student_comment"></input>
+                  <a href="<%= enterStudentCommentUrl %>" id="submit_student_comment" class="button btn">Submit</a>
+                </p>
+              <% } %>
             <% } %>
             <% if (annotated) { %>
               <b>{% trans "Annotated file from instructor" %}</b>
@@ -74,8 +81,9 @@
         <th class="header">{% trans "Filename" %} <i class="icon fa fa-sort"/></th>
         <th class="header">{% trans "Uploaded" %} <i class="icon fa fa-sort"/></th>
         <th class="header">{% trans "Submitted" %} <i class="icon fa fa-sort"/></th>
-        <th class="header" style="display:none;">{% trans "Grade" %} <i class="icon fa fa-sort"/></th>
+        <th class="header">{% trans "Grade" %} <i class="icon fa fa-sort"/></th>
         <th class="header">{% trans "Mentor's comments" %} <i class="icon fa fa-sort"/></th>
+        <th class="header">{% trans "Student's comments" %} <i class="icon fa fa-sort"/></th>
         <th class="header">{% trans "Annotated" %} <i class="icon fa fa-sort"/></th>
         <th class="header" colspan="2">{% trans "Actions" %}</th>
       </tr>
@@ -101,7 +109,7 @@
               {% trans "No" %}
             <% } %>
           </td>
-          <td style="display:none;">
+          <td>
             <% if (assignment.score !== null) { %>
               <%= assignment.score %> /
               <%= max_score %>
@@ -111,6 +119,7 @@
             <% } %>
           </td>
           <td><%= assignment.comment %></td>
+          <td><%= assignment.student_comment %></td>
           <td>
             <% if (assignment.annotated && assignment.annotated != "None") { %>
               <a href="<%= annotatedUrl %>?module_id=<%= assignment.module_id %>">

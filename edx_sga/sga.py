@@ -132,6 +132,13 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
         help=_("Feedback given to student by instructor.")
     )
 
+    student_comment = String(
+        display_name=_("Student comment"),
+        default='',
+        scope=Scope.user_state,
+        help=_("Feedback given to instructor by students.")
+    )
+
     annotated_sha1 = String(
         display_name=_("Annotated SHA1"),
         scope=Scope.user_state,
@@ -461,6 +468,21 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
         require(self.is_course_staff())
         return Response(json_body=self.staff_grading_data())
 
+
+    @XBlock.handler
+    def enter_student_comment(self, request, suffix=''):
+        user = User.objects.get(id=self.xmodule_runtime.user_id)
+        module = self.get_or_create_student_module(user)
+        state = json.loads(module.state)
+        state['student_comment'] = request.params.get('student_comment', '')
+        module.state = json.dumps(state)
+        module.save()
+        return Response(
+            json_body={
+                "success": True
+            }
+        )
+
     @XBlock.handler
     def enter_grade(self, request, suffix=''):
         # pylint: disable=unused-argument
@@ -495,6 +517,7 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
         else:
             state['staff_score'] = score
         state['comment'] = request.params.get('comment', '')
+        state['student_comment'] = request.params.get('student_comment', '')
         module.state = json.dumps(state)
         module.save()
         log.info(
@@ -552,6 +575,7 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
         state = json.loads(module.state)
         state['staff_score'] = None
         state['comment'] = ''
+        state['student_comment'] = ''
         state['annotated_sha1'] = None
         state['annotated_filename'] = None
         state['annotated_mimetype'] = None
@@ -885,8 +909,10 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
         score = self.score
         if score is not None:
             graded = {'score': score, 'comment': force_text(self.comment)}
+            student_commented = {'student_comment': force_text(self.student_comment)}
         else:
             graded = None
+            student_commented = None
 
         if self.answer_available():
             solution = self.runtime.replace_urls(force_text(self.solution))
@@ -898,6 +924,7 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
             "uploaded": uploaded,
             "annotated": annotated,
             "graded": graded,
+            "student_commented": student_commented,
             "max_score": self.max_score(),
             "upload_allowed": self.upload_allowed(submission_data=submission),
             "solution": solution,
@@ -968,6 +995,7 @@ class StaffGradedAssignmentXBlock(StudioEditableXBlockMixin, ShowAnswerXBlockMix
                     'may_grade': instructor or not approved,
                     'annotated': force_text(state.get("annotated_filename", '')),
                     'comment': force_text(state.get("comment", '')),
+                    'student_comment': force_text(state.get("student_comment", '')),
                     'finalized': is_finalized_submission(submission_data=submission)
                 }
 

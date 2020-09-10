@@ -19,6 +19,7 @@ function StaffGradedAssignmentXBlock(runtime, element) {
         var prepareDownloadSubmissionsUrl = runtime.handlerUrl(element, 'prepare_download_submissions');
         var downloadSubmissionsStatusUrl = runtime.handlerUrl(element, 'download_submissions_status');
         var requestResubmissiontUrl = runtime.handlerUrl(element, 'request_for_resubmission');
+        var enterStudentCommentUrl = runtime.handlerUrl(element, 'enter_student_comment');
         var template = _.template($(element).find("#sga-tmpl").text());
         var gradingTemplate;
         var preparingSubmissionsMsg = gettext(
@@ -31,6 +32,7 @@ function StaffGradedAssignmentXBlock(runtime, element) {
             state.annotatedUrl = annotatedUrl;
             state.error = state.error || false;
             state.requestResubmissiontUrl = requestResubmissiontUrl;
+            state.enterStudentCommentUrl = enterStudentCommentUrl;
 
             // Render template
             var content = $(element).find('#sga-content').html(template(state));
@@ -54,6 +56,22 @@ function StaffGradedAssignmentXBlock(runtime, element) {
                   function (state) {
                       alert('Your Request has been sent');
                       $("#request_for_resubmit").hide();
+                  }
+              ).fail(
+                  function () {
+                      state.error = gettext('Submission failed. Please contact your course instructor.');
+                      render(state);
+                  }
+              );
+            });
+
+            $(content).find('#submit_student_comment').on('click', function(e) {
+              e.preventDefault();
+              data = {'student_comment': $(content).find('#student_comment').val()}
+              $.post(enterStudentCommentUrl, data).success(
+                  function (state) {
+                      alert('Your Comment has been sent');
+                      $(".student_comment_section").hide();
                   }
               ).fail(
                   function () {
